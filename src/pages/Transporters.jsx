@@ -13,7 +13,7 @@ import { StatusBadge } from '../components/ui/StatusBadge'
 const blankTransporter = { transporter_name: '', phone: '', vehicle_type: 'Truck' }
 
 export default function Transporters() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const toast = useToast()
 
   const [search, setSearch] = useState('')
@@ -75,7 +75,7 @@ export default function Transporters() {
         await update('transporter', { transporter_id: editing.transporter_id }, payload)
         toast.success('Transporter updated.')
       } else {
-        await create('transporter', { transporter_id: nextId('transporter', 'transporter_id'), ...payload })
+        await create('transporter', payload)
         toast.success('Transporter added.')
       }
       setFormOpen(false)

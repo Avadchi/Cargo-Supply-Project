@@ -1,0 +1,183 @@
+// Translates between the shape the UI uses and the columns that actually
+// exist in the Supabase project.
+//
+// The database stores some fields combined (name, address) and names a few
+// columns differently from the UI. Keeping the translation in one place means
+// the pages can keep using readable fields such as `first_name` and `city`.
+//
+// The two schema gaps that cannot be represented cleanly are handled with
+// fallbacks:
+//   * supplier/customer.pincode is `character` (one char). If Postgres rejects
+//     a 6-digit value, it is appended to `street_city_state` instead.
+//   * shipment has a single `ship_date_delivery_date` column. If the split
+//     `ship_date` / `delivery_date` columns do not exist, the ship date is
+//     written to the combined column.
+
+export const IDENTITY_COLUMNS = {
+  supplier: 'supplier_id',
+  category: 'category_id',
+  customer: 'customer_id',
+  transporter: 'transporter_id',
+  warehouse: 'warehouse_id',
+  employee: 'emp_id',
+  product: 'product_id',
+  purchase_order: 'po_id',
+  customer_order: 'order_id',
+  payment: 'payment_id',
+  shipment: 'shipment_id',
+}
+
+const NAME_TABLES = new Set(['customer', 'employee'])
+const ADDRESS_TABLES = new Set(['supplier', 'customer'])
+
+function isBlank(value) {
+  return value === undefined || value === null || value === ''
+}
+
+export function splitCombinedName(value) {
+  const text = String(value || '').trim()
+  if (!text) return { first_name: '', last_name: '' }
+  const space = text.indexOf(' ')
+  if (space === -1) return { first_name: text, last_name: '' }
+  return { first_name: text.slice(0, space), last_name: text.slice(space + 1).trim() }
+}
+
+export function splitCombinedAddress(value) {
+  const text = String(value || '').trim()
+  if (!text) return { street: '', city: '', state: '', pincode: '' }
+
+  let remainder = text
+  let pincode = ''
+  const pinMatch = remainder.match(/\s*-\s*(\d{4,10})\s*$/)
+  if (pinMatch) {
+    pincode = pinMatch[1]
+    remainder = remainder.slice(0, pinMatch.index).trim()
+  }
+
+  const parts = remainder.split(',').map((part) => part.trim()).filter(Boolean)
+  if (parts.length >= 3) {
+    return {
+      street: parts.slice(0, -2).join(', '),
+      city: parts[parts.length - 2],
+      state: parts[parts.length - 1],
+      pincode,
+    }
+  }
+  if (parts.length === 2) {
+    return { street: parts[0], city: parts[1], state: '', pincode }
+  }
+  return { street: parts[0] || '', city: '', state: '', pincode }
+}
+
+export function combineAddress(input) {
+  return [input.street, input.city, input.state]
+    .filter((part) => !isBlank(part))
+    .map((part) => String(part).trim())
+    .join(', ')
+}
+
+// Maps a row coming out of Supabase into the shape the UI renders.
+export function normalizeRow(table, row) {
+  if (!row) return row
+  const next = { ...row }
+
+  if (NAME_TABLES.has(table) && next.first_name_last_name) {
+    if (isBlank(next.first_name) && isBlank(next.last_name)) {
+      Object.assign(next, splitCombinedName(next.first_name_last_name))
+    }
+  }
+
+  if (ADDRESS_TABLES.has(table) && next.street_city_state) {
+    const parsed = splitCombinedAddress(next.street_city_state)
+    if (isBlank(next.street)) next.street = parsed.street
+    if (isBlank(next.city)) next.city = parsed.city
+    if (isBlank(next.state)) next.state = parsed.state
+    // A `character` pincode column can only hold one digit, so prefer the
+    // six-digit value that was folded into the combined address.
+    if (parsed.pincode && String(next.pincode || '').length < 6) next.pincode = parsed.pincode
+  }
+
+  if (table === 'supplier_product' && isBlank(next.lead_time) && !isBlank(next.lead_time_days)) {
+    next.lead_time = next.lead_time_days
+  }
+
+  if (table === 'shipment' && isBlank(next.ship_date) && next.ship_date_delivery_date) {
+    next.ship_date = next.ship_date_delivery_date
+    if (isBlank(next.delivery_date)) next.delivery_date = null
+  }
+
+  return next
+}
+
+export function normalizeRows(table, rows) {
+  return (rows || []).map((row) => normalizeRow(table, row))
+}
+
+// Maps a UI payload into the columns Supabase expects.
+export function toDbPayload(table, input) {
+  const next = { ...input }
+
+  if (NAME_TABLES.has(table)) {
+    if (!isBlank(next.first_name) || !isBlank(next.last_name)) {
+      next.first_name_last_name = [next.first_name, next.last_name]
+        .filter((part) => !isBlank(part))
+        .map((part) => String(part).trim())
+        .join(' ')
+      delete next.first_name
+      delete next.last_name
+    }
+  }
+
+  if (ADDRESS_TABLES.has(table)) {
+    if (!isBlank(next.street) || !isBlank(next.city) || !isBlank(next.state)) {
+      next.street_city_state = combineAddress(next)
+      delete next.street
+      delete next.city
+      delete next.state
+    }
+  }
+
+  if (table === 'supplier_product' && next.lead_time !== undefined) {
+    next.lead_time_days = next.lead_time
+    delete next.lead_time
+  }
+
+  return next
+}
+
+// Identity columns are generated by Postgres, so they must never be sent.
+export function stripIdentity(table, input) {
+  const column = IDENTITY_COLUMNS[table]
+  if (!column) return { ...input }
+  const next = { ...input }
+  delete next[column]
+  return next
+}
+
+export function isPincodeTooLongError(error) {
+  const message = error?.message || ''
+  return /character\(1\)/i.test(message) || (error?.code === '22001' && /pincode/i.test(message))
+}
+
+export function isLegacyShipmentError(error) {
+  const message = error?.message || ''
+  const code = error?.code || ''
+  return (
+    /(ship_date|delivery_date)/i.test(message) &&
+    (/does not exist/i.test(message) || /schema cache/i.test(message) || code === 'PGRST204')
+  )
+}
+
+export function foldPincodeIntoAddress(rows) {
+  return rows.map(({ pincode, ...row }) => ({
+    ...row,
+    street_city_state: `${row.street_city_state || ''}${pincode ? ` - ${pincode}` : ''}`,
+  }))
+}
+
+export function toLegacyShipment(rows) {
+  return rows.map(({ ship_date, delivery_date, ...row }) => ({
+    ...row,
+    ship_date_delivery_date: ship_date || delivery_date || null,
+  }))
+}

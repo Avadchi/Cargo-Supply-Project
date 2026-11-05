@@ -25,21 +25,21 @@ import { PageHeader } from '../components/ui/Bits'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 
 const TABLES = [
-  { name: 'supplier', label: 'Supplier', pk: 'supplier_id', columns: 9, description: 'Vendor identity, contact, address, rating and registration date.' },
+  { name: 'supplier', label: 'Supplier', pk: 'supplier_id', columns: 7, description: 'Vendor identity, contact, combined address, rating and registration date.' },
   { name: 'supplier_phone', label: 'Supplier phone', pk: 'supplier_id + phone_no', columns: 2, description: 'One-to-many contact numbers for each supplier.' },
   { name: 'category', label: 'Category', pk: 'category_id', columns: 3, description: 'Product taxonomy and merchandising groups.' },
   { name: 'product', label: 'Product', pk: 'product_id', columns: 6, description: 'Catalogue items, pricing and reorder thresholds.' },
-  { name: 'warehouse', label: 'Warehouse', pk: 'warehouse_id', columns: 4, description: 'Facilities, capacity and assigned manager.' },
-  { name: 'employee', label: 'Employee', pk: 'emp_id', columns: 9, description: 'People, roles, salary, warehouse and supervisor.' },
+  { name: 'warehouse', label: 'Warehouse', pk: 'warehouse_id', columns: 5, description: 'Facilities, capacity and assigned manager.' },
+  { name: 'employee', label: 'Employee', pk: 'emp_id', columns: 8, description: 'People, combined name, role, salary, warehouse and supervisor.' },
   { name: 'supplier_product', label: 'Supplier product', pk: 'supplier_id + product_id', columns: 4, description: 'Many-to-many supply catalogue with price and lead time.' },
   { name: 'purchase_order', label: 'Purchase order', pk: 'po_id', columns: 5, description: 'Procurement header linked to supplier and warehouse.' },
   { name: 'po_item', label: 'PO item', pk: 'po_id + line_no', columns: 5, description: 'Products and quantities on each purchase order.' },
-  { name: 'customer', label: 'Customer', pk: 'customer_id', columns: 9, description: 'Customer identity, contact and delivery address.' },
+  { name: 'customer', label: 'Customer', pk: 'customer_id', columns: 6, description: 'Customer identity, contact and combined delivery address.' },
   { name: 'customer_order', label: 'Customer order', pk: 'order_id', columns: 5, description: 'Order header linked to customer and fulfilment warehouse.' },
   { name: 'order_item', label: 'Order item', pk: 'order_id + line_no', columns: 5, description: 'Products, quantities and selling prices on each order.' },
   { name: 'payment', label: 'Payment', pk: 'payment_id', columns: 5, description: 'Payment records associated with customer orders.' },
   { name: 'transporter', label: 'Transporter', pk: 'transporter_id', columns: 4, description: 'Carrier identity, phone number and vehicle type.' },
-  { name: 'shipment', label: 'Shipment', pk: 'shipment_id', columns: 6, description: 'Order dispatch, transporter, delivery dates and status.' },
+  { name: 'shipment', label: 'Shipment', pk: 'shipment_id', columns: 5, description: 'Order dispatch, transporter, ship/delivery date and status.' },
   { name: 'inventory', label: 'Inventory', pk: 'warehouse_id + product_id', columns: 4, description: 'Quantity on hand and last update for each warehouse-product pair.' },
 ]
 

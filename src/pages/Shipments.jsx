@@ -27,7 +27,7 @@ import { StatusBadge } from '../components/ui/StatusBadge'
 const blankShipment = { order_id: '', transporter_id: '', ship_date: todayISO(), delivery_date: '', shipment_status: 'Pending' }
 
 export default function Shipments() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { customerById, transporterById, orderById } = useLookups()
   const toast = useToast()
   const navigate = useNavigate()
@@ -108,7 +108,7 @@ export default function Shipments() {
       if (editing) {
         await update('shipment', { shipment_id: editing.shipment_id }, payload)
       } else {
-        await create('shipment', { shipment_id: nextId('shipment', 'shipment_id'), ...payload })
+        await create('shipment', payload)
       }
 
       const order = orderById.get(String(form.order_id))

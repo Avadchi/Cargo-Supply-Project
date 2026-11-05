@@ -42,7 +42,7 @@ const blankOrder = { customer_id: '', warehouse_id: '', order_date: todayISO(), 
 const blankLine = { product_id: '', quantity: '', unit_price: '' }
 
 export default function Orders() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { customerById, warehouseById, productById, transporterById, customerName, warehouseName, paymentsByOrder, shipmentByOrder } = useLookups()
   const toast = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -175,7 +175,7 @@ export default function Orders() {
   const handleSave = async () => {
     if (!validate()) return
     setSaving(true)
-    const orderId = editing ? editing.order_id : nextId('customer_order', 'order_id')
+    let orderId = editing ? editing.order_id : null
     try {
       if (editing) {
         await update('customer_order', { order_id: orderId }, {
@@ -189,13 +189,13 @@ export default function Orders() {
           await remove('order_item', { order_id: orderId, line_no: item.line_no })
         }
       } else {
-        await create('customer_order', {
-          order_id: orderId,
+        const [order] = await create('customer_order', {
           customer_id: Number(form.customer_id),
           warehouse_id: Number(form.warehouse_id),
           order_date: form.order_date,
           order_status: form.order_status,
         })
+        orderId = order.order_id
       }
       await create(
         'order_item',
@@ -257,7 +257,6 @@ export default function Orders() {
     setPaymentSaving(true)
     try {
       await create('payment', {
-        payment_id: nextId('payment', 'payment_id'),
         order_id: viewingOrder.order_id,
         amount,
         payment_method: paymentForm.payment_method,
@@ -284,7 +283,6 @@ export default function Orders() {
     setShipmentSaving(true)
     try {
       await create('shipment', {
-        shipment_id: nextId('shipment', 'shipment_id'),
         order_id: viewingOrder.order_id,
         transporter_id: Number(shipmentForm.transporter_id),
         ship_date: shipmentForm.ship_date,

@@ -36,7 +36,7 @@ const designations = [
 ]
 
 export default function Employees() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { warehouseById, employeeById } = useLookups()
   const toast = useToast()
 
@@ -128,7 +128,7 @@ export default function Employees() {
         await update('employee', { emp_id: editing.emp_id }, payload)
         toast.success('Employee record updated.')
       } else {
-        await create('employee', { emp_id: nextId('employee', 'emp_id'), ...payload })
+        await create('employee', payload)
         toast.success('Employee added.')
       }
       setFormOpen(false)

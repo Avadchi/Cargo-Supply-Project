@@ -56,9 +56,30 @@ The app expects the following 16 tables, using singular snake_case names and the
 | `shipment` | `shipment_id` |
 | `inventory` | `warehouse_id`, `product_id` |
 
-Column names follow the ERD: e.g. `supplier.supplier_name`, `supplier.email`, `supplier.street`, `supplier.city`, `supplier.state`, `supplier.pincode`, `supplier.rating`, `supplier.reg_date`; `product.product_name`, `product.category_id`, `product.unit_price`, `product.reorder_level`, `product.description`; `purchase_order.po_date`, `purchase_order.po_status`; `po_item.quantity`, `po_item.unit_cost`; `customer_order.order_date`, `customer_order.order_status`; `order_item.quantity`, `order_item.unit_price`; `payment.amount`, `payment.payment_method`, `payment.payment_date`; `shipment.ship_date`, `shipment.delivery_date`, `shipment.shipment_status`; `inventory.quantity_on_hand`, `inventory.last_updated`.
+The UI uses readable field names; `src/lib/schema.js` translates them to the columns that exist in Supabase:
 
-Numeric IDs are generated client-side as `max(existing ID) + 1`, so ID columns should be plain integers (not `serial`/identity) unless you adapt the code.
+| UI field | Supabase column |
+| --- | --- |
+| `first_name` + `last_name` | `first_name_last_name` |
+| `street` + `city` + `state` | `street_city_state` |
+| `lead_time` | `lead_time_days` |
+| `ship_date` + `delivery_date` | `ship_date` + `delivery_date`, falling back to `ship_date_delivery_date` |
+| `pincode` | `pincode`, falling back to a suffix on `street_city_state` |
+
+Primary keys are `GENERATED ALWAYS AS IDENTITY`, so the app never sends explicit IDs. `create()` returns the inserted row, and dependent rows (order items, PO items, supplier phones) use the generated key.
+
+Two schema fixes are recommended for full functionality (also saved as [`supabase/schema-fixes.sql`](supabase/schema-fixes.sql)):
+
+```sql
+alter table supplier alter column pincode type varchar(6);
+alter table customer alter column pincode type varchar(6);
+
+alter table shipment add column ship_date date;
+alter table shipment add column delivery_date date;
+update shipment set ship_date = ship_date_delivery_date;
+-- optional once the app no longer needs the old column:
+-- alter table shipment drop column ship_date_delivery_date;
+```
 
 ### Row Level Security
 

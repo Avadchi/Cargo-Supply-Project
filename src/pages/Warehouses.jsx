@@ -23,7 +23,7 @@ import { StatusBadge } from '../components/ui/StatusBadge'
 const blankWarehouse = { warehouse_name: '', city: '', capacity: '', manager_id: '' }
 
 export default function Warehouses() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { employeeName } = useLookups()
   const toast = useToast()
 
@@ -90,6 +90,16 @@ export default function Warehouses() {
     if (!form.warehouse_name.trim()) next.warehouse_name = 'Warehouse name is required.'
     if (!form.city.trim()) next.city = 'City is required.'
     if (!form.capacity || numeric(form.capacity) <= 0) next.capacity = 'Capacity must be greater than zero.'
+    if (
+      form.manager_id &&
+      (db.warehouse || []).some(
+        (warehouse) =>
+          String(warehouse.manager_id) === String(form.manager_id) &&
+          String(warehouse.warehouse_id) !== String(editing?.warehouse_id),
+      )
+    ) {
+      next.manager_id = 'This employee already manages another warehouse.'
+    }
     setErrors(next)
     if (Object.keys(next).length) return
 
@@ -105,7 +115,7 @@ export default function Warehouses() {
         await update('warehouse', { warehouse_id: editing.warehouse_id }, payload)
         toast.success('Warehouse updated.')
       } else {
-        await create('warehouse', { warehouse_id: nextId('warehouse', 'warehouse_id'), ...payload })
+        await create('warehouse', payload)
         toast.success('Warehouse added.')
       }
       setFormOpen(false)
@@ -238,7 +248,7 @@ export default function Warehouses() {
               <TextInput type="number" min="1" value={form.capacity} onChange={(event) => setForm({ ...form, capacity: event.target.value })} placeholder="e.g. 50000" />
             </Field>
           </FormGrid>
-          <Field label="Assigned manager" hint="Only existing employees can be assigned.">
+          <Field label="Assigned manager" hint="Each employee can manage only one warehouse (manager_id is unique)." error={errors.manager_id}>
             <SelectInput
               value={form.manager_id}
               onChange={(event) => setForm({ ...form, manager_id: event.target.value })}

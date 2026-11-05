@@ -35,7 +35,7 @@ const blankSupplier = {
 }
 
 export default function Suppliers() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { phonesBySupplier, productsBySupplier } = useLookups()
   const toast = useToast()
 
@@ -142,9 +142,8 @@ export default function Suppliers() {
         }
         toast.success('Supplier updated.')
       } else {
-        const supplierId = nextId('supplier', 'supplier_id')
-        await create('supplier', { supplier_id: supplierId, ...payload })
-        await create('supplier_phone', cleanPhones.map((phone) => ({ supplier_id: supplierId, phone_no: phone })))
+        const [supplier] = await create('supplier', payload)
+        await create('supplier_phone', cleanPhones.map((phone) => ({ supplier_id: supplier.supplier_id, phone_no: phone })))
         toast.success('Supplier added to the network.')
       }
       setFormOpen(false)

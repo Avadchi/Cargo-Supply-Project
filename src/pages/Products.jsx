@@ -31,7 +31,7 @@ const blankProduct = {
 }
 
 export default function Products() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { categoryById, supplierById } = useLookups()
   const toast = useToast()
   const [searchParams] = useSearchParams()
@@ -137,7 +137,7 @@ export default function Products() {
         await update('product', { product_id: editing.product_id }, payload)
         toast.success('Product updated.')
       } else {
-        await create('product', { product_id: nextId('product', 'product_id'), ...payload })
+        await create('product', payload)
         toast.success('Product added to the catalogue.')
       }
       setFormOpen(false)

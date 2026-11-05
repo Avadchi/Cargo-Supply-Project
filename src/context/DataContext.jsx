@@ -2,6 +2,17 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { TABLE_NAMES } from '../lib/constants'
 import { buildDemoData } from '../lib/demoData'
+import {
+  IDENTITY_COLUMNS,
+  foldPincodeIntoAddress,
+  isLegacyShipmentError,
+  isPincodeTooLongError,
+  normalizeRow,
+  normalizeRows,
+  stripIdentity,
+  toDbPayload,
+  toLegacyShipment,
+} from '../lib/schema'
 
 const DataContext = createContext(null)
 const DEMO_KEY = 'kargo.demo.workspace.v3'
@@ -65,7 +76,7 @@ export function DataProvider({ children }) {
         TABLE_NAMES.map(async (table) => {
           const { data, error: queryError } = await supabase.from(table).select('*')
           if (queryError) throw new Error(`${table}: ${queryError.message}`)
-          return [table, data || []]
+          return [table, normalizeRows(table, data)]
         }),
       )
       const next = Object.fromEntries(results)
@@ -94,22 +105,41 @@ export function DataProvider({ children }) {
     async (table, input) => {
       const rows = Array.isArray(input) ? input : [input]
       if (mode === 'demo' || !isSupabaseConfigured) {
+        const idColumn = IDENTITY_COLUMNS[table]
+        let nextIdValue = (db[table] || []).reduce(
+          (max, row) => Math.max(max, Number(row[idColumn]) || 0),
+          0,
+        )
+        const prepared = rows.map((row) => {
+          if (!idColumn || row[idColumn] != null) return row
+          nextIdValue += 1
+          return { ...row, [idColumn]: nextIdValue }
+        })
         persistLocal((previous) => ({
           ...previous,
-          [table]: [...(previous[table] || []), ...rows],
+          [table]: [...(previous[table] || []), ...prepared],
         }))
-        return rows
+        return prepared
       }
 
-      const { data, error: insertError } = await supabase.from(table).insert(rows).select()
-      if (insertError) throw new Error(insertError.message)
+      const payload = rows.map((row) => stripIdentity(table, toDbPayload(table, row)))
+      let response = await supabase.from(table).insert(payload).select()
+
+      if (response.error && isPincodeTooLongError(response.error) && ['supplier', 'customer'].includes(table)) {
+        response = await supabase.from(table).insert(foldPincodeIntoAddress(payload)).select()
+      } else if (response.error && isLegacyShipmentError(response.error) && table === 'shipment') {
+        response = await supabase.from(table).insert(toLegacyShipment(payload)).select()
+      }
+
+      if (response.error) throw new Error(response.error.message)
+      const inserted = normalizeRows(table, response.data || payload)
       setDb((previous) => ({
         ...previous,
-        [table]: [...(previous[table] || []), ...(data || rows)],
+        [table]: [...(previous[table] || []), ...inserted],
       }))
-      return data || rows
+      return inserted
     },
-    [mode, persistLocal],
+    [mode, persistLocal, db],
   )
 
   const update = useCallback(
@@ -122,13 +152,30 @@ export function DataProvider({ children }) {
         return
       }
 
-      const query = supabase.from(table).update(patch)
-      const { data, error: updateError } = await query.match(match).select()
-      if (updateError) throw new Error(updateError.message)
+      const payload = toDbPayload(table, patch)
+      let response = await supabase.from(table).update(payload).match(match).select()
+
+      if (response.error && isPincodeTooLongError(response.error) && ['supplier', 'customer'].includes(table)) {
+        const legacy = { ...payload }
+        const pincode = legacy.pincode
+        delete legacy.pincode
+        if (pincode && legacy.street_city_state) legacy.street_city_state = `${legacy.street_city_state} - ${pincode}`
+        response = await supabase.from(table).update(legacy).match(match).select()
+      } else if (response.error && isLegacyShipmentError(response.error) && table === 'shipment') {
+        const legacy = { ...payload }
+        const dated = legacy.ship_date || legacy.delivery_date
+        delete legacy.ship_date
+        delete legacy.delivery_date
+        if (dated !== undefined) legacy.ship_date_delivery_date = dated
+        response = await supabase.from(table).update(legacy).match(match).select()
+      }
+
+      if (response.error) throw new Error(response.error.message)
+      const updated = normalizeRow(table, response.data?.[0])
       setDb((previous) => ({
         ...previous,
         [table]: (previous[table] || []).map((row) =>
-          matchRow(row, match) ? { ...row, ...patch, ...(data?.[0] || {}) } : row,
+          matchRow(row, match) ? { ...row, ...patch, ...(updated || {}) } : row,
         ),
       }))
     },

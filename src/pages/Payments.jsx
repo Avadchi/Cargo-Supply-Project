@@ -15,7 +15,7 @@ import { StatusBadge } from '../components/ui/StatusBadge'
 const blankPayment = { order_id: '', amount: '', payment_method: 'UPI', payment_date: todayISO() }
 
 export default function Payments() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { customerById, orderById } = useLookups()
   const toast = useToast()
   const navigate = useNavigate()
@@ -122,7 +122,7 @@ export default function Payments() {
         await update('payment', { payment_id: editing.payment_id }, payload)
         toast.success('Payment updated.')
       } else {
-        await create('payment', { payment_id: nextId('payment', 'payment_id'), ...payload })
+        await create('payment', payload)
         toast.success('Payment recorded.')
       }
       setFormOpen(false)

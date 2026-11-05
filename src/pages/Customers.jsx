@@ -23,7 +23,7 @@ const blankCustomer = {
 }
 
 export default function Customers() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const toast = useToast()
   const [search, setSearch] = useState('')
   const [formOpen, setFormOpen] = useState(false)
@@ -113,7 +113,7 @@ export default function Customers() {
         await update('customer', { customer_id: editing.customer_id }, payload)
         toast.success('Customer updated.')
       } else {
-        await create('customer', { customer_id: nextId('customer', 'customer_id'), ...payload })
+        await create('customer', payload)
         toast.success('Customer added.')
       }
       setFormOpen(false)

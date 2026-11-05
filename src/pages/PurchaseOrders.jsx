@@ -15,7 +15,7 @@ import {
 import { useData } from '../context/DataContext'
 import { useToast } from '../context/ToastContext'
 import { useLookups } from '../hooks/useLookups'
-import { downloadCSV, formatCurrency, formatDate, formatNumber, numeric, nowISO, poTotal, todayISO } from '../lib/utils'
+import { downloadCSV, formatCurrency, formatDate, formatNumber, numeric, poTotal, todayISO } from '../lib/utils'
 import { PO_STATUSES } from '../lib/constants'
 import { PageHeader, SearchInput, EmptyState, DetailRow } from '../components/ui/Bits'
 import { Modal, Drawer } from '../components/ui/Modal'
@@ -27,7 +27,7 @@ const blankPo = { supplier_id: '', warehouse_id: '', po_date: todayISO(), po_sta
 const blankLine = { product_id: '', quantity: '', unit_cost: '' }
 
 export default function PurchaseOrders() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const { supplierById, warehouseById, productById } = useLookups()
   const toast = useToast()
 
@@ -145,7 +145,7 @@ export default function PurchaseOrders() {
   const handleSave = async () => {
     if (!validate()) return
     setSaving(true)
-    const poId = editing ? editing.po_id : nextId('purchase_order', 'po_id')
+    let poId = editing ? editing.po_id : null
     const payload = {
       supplier_id: Number(form.supplier_id),
       warehouse_id: Number(form.warehouse_id),
@@ -160,7 +160,8 @@ export default function PurchaseOrders() {
           await remove('po_item', { po_id: poId, line_no: item.line_no })
         }
       } else {
-        await create('purchase_order', { po_id: poId, ...payload })
+        const [po] = await create('purchase_order', payload)
+        poId = po.po_id
       }
       await create(
         'po_item',
@@ -222,14 +223,14 @@ export default function PurchaseOrders() {
           await update(
             'inventory',
             { warehouse_id: po.warehouse_id, product_id: item.product_id },
-            { quantity_on_hand: numeric(existing.quantity_on_hand) + numeric(item.quantity), last_updated: nowISO() },
+            { quantity_on_hand: numeric(existing.quantity_on_hand) + numeric(item.quantity), last_updated: todayISO() },
           )
         } else {
           await create('inventory', {
             warehouse_id: po.warehouse_id,
             product_id: item.product_id,
             quantity_on_hand: numeric(item.quantity),
-            last_updated: nowISO(),
+            last_updated: todayISO(),
           })
         }
       }

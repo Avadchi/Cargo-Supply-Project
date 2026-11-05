@@ -19,7 +19,7 @@ const tones = [
 ]
 
 export default function Categories() {
-  const { db, create, update, remove, nextId } = useData()
+  const { db, create, update, remove } = useData()
   const toast = useToast()
   const [search, setSearch] = useState('')
   const [formOpen, setFormOpen] = useState(false)
@@ -83,7 +83,6 @@ export default function Categories() {
         toast.success('Category updated.')
       } else {
         await create('category', {
-          category_id: nextId('category', 'category_id'),
           category_name: form.category_name.trim(),
           description: form.description.trim(),
         })

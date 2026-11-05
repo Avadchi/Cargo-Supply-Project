@@ -15,7 +15,7 @@ import {
 import { useData } from '../context/DataContext'
 import { useToast } from '../context/ToastContext'
 import { useLookups } from '../hooks/useLookups'
-import { downloadCSV, formatCurrency, formatDateTime, formatNumber, numeric, nowISO, stockStatus } from '../lib/utils'
+import { downloadCSV, formatCurrency, formatDate, formatNumber, numeric, stockStatus, todayISO } from '../lib/utils'
 import { PageHeader, SearchInput, EmptyState } from '../components/ui/Bits'
 import { Modal } from '../components/ui/Modal'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
@@ -114,7 +114,7 @@ export default function Inventory() {
         await update(
           'inventory',
           { warehouse_id: editing.warehouse_id, product_id: editing.product_id },
-          { quantity_on_hand: Number(form.quantity_on_hand), last_updated: nowISO() },
+          { quantity_on_hand: Number(form.quantity_on_hand), last_updated: todayISO() },
         )
         toast.success('Inventory quantity updated.')
       } else {
@@ -122,7 +122,7 @@ export default function Inventory() {
           warehouse_id: Number(form.warehouse_id),
           product_id: Number(form.product_id),
           quantity_on_hand: Number(form.quantity_on_hand),
-          last_updated: nowISO(),
+          last_updated: todayISO(),
         })
         toast.success('Inventory record created.')
       }
@@ -234,7 +234,7 @@ export default function Inventory() {
                     <td><span className="font-mono text-[10.5px] text-mist">{formatNumber(row.product?.reorder_level)}</span></td>
                     <td><span className="font-mono text-[10.5px] text-ink-800">{formatCurrency(row.value, true)}</span></td>
                     <td><StatusBadge status={row.status} /></td>
-                    <td><span className="text-[10px] text-mist">{formatDateTime(row.last_updated)}</span></td>
+                    <td><span className="text-[10px] text-mist">{formatDate(row.last_updated)}</span></td>
                     <td>
                       <div className="flex justify-end gap-0.5">
                         <button className="icon-btn" onClick={() => openEdit(row)} title="Update stock"><Pencil size={13} /></button>
