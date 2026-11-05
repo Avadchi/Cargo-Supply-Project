@@ -1,0 +1,216 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #10241c;
+  background: #f4f4ed;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #f4f4ed;
+  font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  color: #10241c;
+  background: #d4fa7c;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #c8cdc3;
+  border: 3px solid #f4f4ed;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9ea89e;
+}
+.dark-scroll::-webkit-scrollbar-thumb {
+  background: #2d4a3d;
+  border-color: #10241c;
+}
+
+@layer components {
+  .page-shell {
+    @apply mx-auto w-full max-w-[1540px] px-4 pb-16 pt-6 sm:px-6 lg:px-8;
+  }
+
+  .panel {
+    @apply rounded-2xl border border-line bg-white shadow-card;
+  }
+
+  .panel-flat {
+    @apply rounded-2xl border border-line bg-paper;
+  }
+
+  .kicker {
+    @apply font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-mist;
+  }
+
+  .field-label {
+    @apply mb-1.5 block text-[12px] font-semibold text-ink-800;
+  }
+
+  .input {
+    @apply h-10 w-full rounded-xl border border-line bg-white px-3 text-[13.5px] text-ink-900 outline-none transition placeholder:text-mist/70 hover:border-[#c8cec1] focus:border-ink-600 focus:ring-4 focus:ring-ink-600/10 disabled:cursor-not-allowed disabled:bg-canvas disabled:text-mist;
+  }
+
+  .select {
+    @apply input appearance-none bg-[linear-gradient(45deg,transparent_50%,#67736c_50%),linear-gradient(135deg,#67736c_50%,transparent_50%)] bg-[length:5px_5px,5px_5px] bg-[position:calc(100%-16px)_47%,calc(100%-11px)_47%] bg-no-repeat pr-9;
+  }
+
+  .textarea {
+    @apply input h-auto min-h-[84px] resize-y py-2.5;
+  }
+
+  .btn {
+    @apply inline-flex h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 text-[13px] font-semibold transition active:scale-[0.985] disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-ink-900 text-white hover:bg-ink-800;
+  }
+
+  .btn-accent {
+    @apply btn bg-lime-500 text-ink-950 hover:bg-lime-400;
+  }
+
+  .btn-secondary {
+    @apply btn border border-line bg-white text-ink-800 hover:border-ink-600/30 hover:bg-paper;
+  }
+
+  .btn-ghost {
+    @apply btn text-mist hover:bg-ink-900/[0.04] hover:text-ink-900;
+  }
+
+  .btn-danger {
+    @apply btn bg-[#FBE7E0] text-[#B84A2C] hover:bg-[#F8D7CB];
+  }
+
+  .icon-btn {
+    @apply inline-flex h-8 w-8 items-center justify-center rounded-lg text-mist transition hover:bg-ink-900/[0.05] hover:text-ink-900;
+  }
+
+  .table-shell {
+    @apply w-full overflow-x-auto;
+  }
+
+  .data-table {
+    @apply w-full min-w-[720px] border-collapse text-left;
+  }
+
+  .data-table thead th {
+    @apply border-b border-line bg-[#F7F7F1] px-4 py-3 font-mono text-[9.5px] font-medium uppercase tracking-[0.12em] text-mist first:pl-5 last:pr-5;
+  }
+
+  .data-table tbody td {
+    @apply border-b border-line/80 px-4 py-3.5 text-[13px] text-ink-800 first:pl-5 last:pr-5;
+  }
+
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-[#FAFAF5];
+  }
+
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[10.5px] font-semibold;
+  }
+
+  .nav-link {
+    @apply relative flex h-9 items-center gap-3 rounded-lg px-3 text-[12.5px] font-medium text-white/55 transition hover:bg-white/[0.06] hover:text-white;
+  }
+
+  .nav-link-active {
+    @apply bg-white/[0.09] text-white;
+  }
+
+  .nav-link-active::before {
+    content: '';
+    @apply absolute -left-3 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-r-full bg-lime-500;
+  }
+
+  .section-title {
+    @apply font-display text-[17px] font-semibold tracking-[-0.01em] text-ink-950;
+  }
+
+  .mini-label {
+    @apply font-mono text-[9.5px] uppercase tracking-[0.12em] text-mist;
+  }
+
+  .skeleton {
+    @apply animate-pulse rounded-lg bg-line/70;
+  }
+}
+
+/* Dashboard grid texture */
+.grid-paper {
+  background-image:
+    linear-gradient(to right, rgba(16, 36, 28, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(16, 36, 28, 0.035) 1px, transparent 1px);
+  background-size: 26px 26px;
+}
+
+.hero-noise {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* Hide number input spinners */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* Recharts */
+.recharts-default-tooltip {
+  border: 1px solid #e1e3d8 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 12px 32px -16px rgba(16, 36, 28, 0.25) !important;
+  font-size: 12px !important;
+}
+.recharts-tooltip-label {
+  font-weight: 600 !important;
+  color: #10241c !important;
+}
