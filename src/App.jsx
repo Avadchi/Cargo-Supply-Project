@@ -18,6 +18,7 @@ import Payments from './pages/Payments'
 import Shipments from './pages/Shipments'
 import Transporters from './pages/Transporters'
 import DatabasePage from './pages/Database'
+import SqlConsole from './pages/SqlConsole'
 
 function BrandMark({ dark = false }) {
   return (
@@ -132,6 +133,7 @@ function AppContent() {
         <Route path="shipments" element={<Shipments />} />
         <Route path="transporters" element={<Transporters />} />
         <Route path="database" element={<DatabasePage />} />
+        <Route path="sql" element={<SqlConsole />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

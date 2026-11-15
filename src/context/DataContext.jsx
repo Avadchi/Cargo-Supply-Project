@@ -62,12 +62,13 @@ export function DataProvider({ children }) {
     setError(null)
   }, [])
 
-  const load = useCallback(async () => {
-    setLoading(true)
+  const load = useCallback(async (options = {}) => {
+    const silent = Boolean(options?.silent)
+    if (!silent) setLoading(true)
     setError(null)
     if (!isSupabaseConfigured) {
       loadDemo()
-      setLoading(false)
+      if (!silent) setLoading(false)
       return
     }
 
@@ -85,13 +86,15 @@ export function DataProvider({ children }) {
     } catch (err) {
       setError(err.message || 'Could not connect to Supabase.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [loadDemo])
 
   useEffect(() => {
     load()
   }, [load])
+
+  const refreshSilent = useCallback(() => load({ silent: true }), [load])
 
   const persistLocal = useCallback((updater) => {
     setDb((previous) => {
@@ -228,10 +231,11 @@ export function DataProvider({ children }) {
       remove,
       nextId,
       refresh: load,
+      refreshSilent,
       loadDemo,
       resetDemo,
     }),
-    [db, loading, error, mode, create, update, remove, nextId, load, loadDemo, resetDemo],
+    [db, loading, error, mode, create, update, remove, nextId, load, refreshSilent, loadDemo, resetDemo],
   )
 
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>

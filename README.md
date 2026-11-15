@@ -94,6 +94,23 @@ create policy "anon all" on supplier
 
 The **Database** page in the app contains a copy-ready version of this policy and a live connection test.
 
+## SQL console
+
+**System → SQL console** runs SQL directly against the live Postgres database and renders the returned rows. It supports the whole editor, a text selection, or a semicolon-separated script, keeps a local history and refreshes the workspace data after writes.
+
+Supabase only exposes PostgREST to the browser, so the console needs a small helper function. Run [`supabase/sql-console.sql`](supabase/sql-console.sql) once in the Supabase SQL editor (or copy the same SQL from the setup panel in the app):
+
+```sql
+create or replace function public.exec_sql(query text)
+returns jsonb language plpgsql security definer set search_path = public
+as $$ ... $$;
+
+grant execute on function public.exec_sql(text) to anon, authenticated;
+notify pgrst, 'reload schema';
+```
+
+> **Demo only.** This grants the anon role arbitrary SQL, including `DROP` and `DELETE`. It is fine for a local academic project; do not ship it to a public deployment or leave it enabled on a shared database.
+
 ## Modules
 
 - **Dashboard** — KPIs, revenue/order charts, status distribution, warehouse utilisation, reorder watchlist, active shipments and procurement pipeline.
@@ -106,6 +123,7 @@ The **Database** page in the app contains a copy-ready version of this policy an
 - **Products / Categories** — catalogue, pricing, reorder levels, stock-by-warehouse and category rollups.
 - **Warehouses / Employees / Customers / Transporters** — facilities, capacity and managers; people and reporting lines; customer history; carrier records.
 - **Database** — connection status, schema map, relationship map, environment checklist, RLS policy helper, workspace JSON export and demo reset.
+- **SQL console** — run SQL against live Postgres, inspect result grids, load quick queries, re-run from local history and refresh workspace data after writes.
 
 Other features: command palette (`⌘/Ctrl + K`), CSV exports, filters and search across modules, responsive layouts, and a fully seeded demo dataset stored in `localStorage`.
 

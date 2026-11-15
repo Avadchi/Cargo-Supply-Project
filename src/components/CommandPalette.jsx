@@ -5,12 +5,14 @@ import {
   Building2,
   ClipboardList,
   CreditCard,
+  Database as DatabaseIcon,
   LayoutDashboard,
   Package,
   Search,
   Ship,
   ShoppingBag,
   Tags,
+  TerminalSquare,
   Truck,
   UserRound,
   Users,
@@ -35,6 +37,8 @@ const pages = [
   { label: 'Employees', to: '/employees', icon: Users },
   { label: 'Customers', to: '/customers', icon: UserRound },
   { label: 'Transporters', to: '/transporters', icon: Truck },
+  { label: 'Database', to: '/database', icon: DatabaseIcon },
+  { label: 'SQL console', to: '/sql', icon: TerminalSquare },
 ]
 
 export function CommandPalette({ open, onClose }) {

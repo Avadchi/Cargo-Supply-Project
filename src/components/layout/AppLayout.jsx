@@ -16,6 +16,7 @@ import {
   Ship,
   ShoppingBag,
   Tags,
+  TerminalSquare,
   Truck,
   UserRound,
   Users,
@@ -56,7 +57,10 @@ const navigation = [
   },
   {
     label: 'System',
-    items: [{ to: '/database', label: 'Database', icon: Database }],
+    items: [
+      { to: '/database', label: 'Database', icon: Database },
+      { to: '/sql', label: 'SQL console', icon: TerminalSquare },
+    ],
   },
 ]
 
@@ -75,6 +79,7 @@ const pageMeta = {
   '/customers': ['Customers', 'Relationships'],
   '/transporters': ['Transporters', 'Logistics'],
   '/database': ['Database', 'System'],
+  '/sql': ['SQL console', 'System'],
 }
 
 function Brand() {
