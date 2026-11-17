@@ -3,9 +3,10 @@
 -- Run this once in the Supabase SQL editor to enable
 -- System -> SQL console inside the app.
 --
--- WARNING: this function lets the anon role execute arbitrary SQL,
--- including DROP and DELETE. Use it only for this academic/demo project
--- and never expose it on a public deployment.
+-- WARNING: SECURITY DEFINER runs with the function owner's privileges and
+-- lets callers using the anon key execute arbitrary SQL, including DROP and
+-- DELETE. Use it only for this academic/demo project and never expose it
+-- on a public deployment.
 
 create or replace function public.exec_sql(query text)
 returns jsonb

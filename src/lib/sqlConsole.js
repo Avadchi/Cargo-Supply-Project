@@ -8,7 +8,8 @@
 export const EXEC_SQL_SETUP = `-- Run this once in the Supabase SQL editor.
 -- Creates the function used by System -> SQL console.
 --
--- WARNING: this lets the anon role run any SQL, including DROP/DELETE.
+-- WARNING: SECURITY DEFINER runs with the function owner's privileges and
+-- lets callers using the anon key execute arbitrary SQL, including DROP/DELETE.
 -- Use it only for this academic project and never on a public deployment.
 
 create or replace function public.exec_sql(query text)
@@ -97,6 +98,94 @@ union all select 'customer_order', count(*) from public.customer_order
 union all select 'shipment', count(*) from public.shipment
 union all select 'inventory', count(*) from public.inventory
 order by table_name;`,
+  },
+  {
+    label: 'DDL · Create anon demo table',
+    description: 'Creates a small table for trying the DML, DCL, transaction and cursor examples below.',
+    sql: `create table if not exists public.anon_sql_demo (
+  id integer generated always as identity primary key,
+  label text not null unique,
+  created_at timestamptz not null default now()
+);`,
+  },
+  {
+    label: 'DML · Insert or update demo row',
+    description: 'Adds a reusable sample row. Run “Create anon demo table” first.',
+    sql: `insert into public.anon_sql_demo (label)
+values ('quick-query-demo')
+on conflict (label) do update
+set label = excluded.label
+returning id, label, created_at;`,
+  },
+  {
+    label: 'DML · Update demo row',
+    description: 'Changes only the sample row created by the insert example.',
+    sql: `update public.anon_sql_demo
+set label = 'quick-query-demo-updated'
+where label in ('quick-query-demo', 'quick-query-demo-updated')
+returning id, label, created_at;`,
+  },
+  {
+    label: 'DML · Delete demo row',
+    description: 'Deletes only the sample row used by these quick queries.',
+    sql: `delete from public.anon_sql_demo
+where label in ('quick-query-demo', 'quick-query-demo-updated')
+returning id, label, created_at;`,
+  },
+  {
+    label: 'DCL · Grant anon access',
+    description: 'Grants direct table and sequence privileges to anon. An RLS policy is also needed if RLS is enabled.',
+    sql: `grant select, insert, update, delete
+on table public.anon_sql_demo to anon;
+grant usage, select
+on sequence public.anon_sql_demo_id_seq to anon;`,
+  },
+  {
+    label: 'DCL · Revoke anon access',
+    description: 'Removes the table and sequence privileges granted by the previous example.',
+    sql: `revoke select, insert, update, delete
+on table public.anon_sql_demo from anon;
+revoke usage, select
+on sequence public.anon_sql_demo_id_seq from anon;`,
+  },
+  {
+    label: 'Transaction · Atomic insert',
+    description: 'A single RPC call is one Postgres transaction. Explicit BEGIN/COMMIT cannot span this editor’s separate RPC calls.',
+    sql: `insert into public.anon_sql_demo (label)
+values ('transaction-demo')
+on conflict (label) do update
+set label = excluded.label
+returning id, label, created_at;`,
+  },
+  {
+    label: 'Cursor · Create cursor function',
+    description: 'Creates a function that opens, fetches and closes a cursor. Run “Cursor · Fetch demo rows” next.',
+    sql: `create or replace function public.anon_sql_demo_cursor()
+returns table (demo_id integer, demo_label text, inserted_at timestamptz)
+language plpgsql
+security invoker
+as $$
+declare
+  demo_cursor cursor for
+    select id, label, created_at
+    from public.anon_sql_demo
+    order by id;
+begin
+  open demo_cursor;
+  loop
+    fetch demo_cursor into demo_id, demo_label, inserted_at;
+    exit when not found;
+    return next;
+  end loop;
+  close demo_cursor;
+end;
+$$;
+grant execute on function public.anon_sql_demo_cursor() to anon;`,
+  },
+  {
+    label: 'Cursor · Fetch demo rows',
+    description: 'Runs the cursor-based function and displays the fetched rows. Create the demo table and cursor function first.',
+    sql: `select * from public.anon_sql_demo_cursor();`,
   },
 ]
 

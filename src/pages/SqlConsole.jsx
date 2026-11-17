@@ -324,7 +324,7 @@ export default function SqlConsole() {
           <div className="flex items-start gap-2 rounded-xl border border-[#E8D3A8] bg-[#FFF9EB] px-4 py-3 text-[10.5px] leading-5 text-[#785A22]">
             <ShieldAlert size={14} className="mt-0.5 shrink-0" />
             <p>
-              This console can run any statement the anon role is permitted to execute, including <code className="rounded bg-black/[0.06] px-1 font-mono text-[9.5px]">DROP</code> and <code className="rounded bg-black/[0.06] px-1 font-mono text-[9.5px]">DELETE</code>. Keep it for this academic project only and never expose it publicly.
+              The <code className="rounded bg-black/[0.06] px-1 font-mono text-[9.5px]">SECURITY DEFINER</code> SQL function may run with its owner’s privileges, not just anon’s. It can execute destructive statements such as <code className="rounded bg-black/[0.06] px-1 font-mono text-[9.5px]">DROP</code> and <code className="rounded bg-black/[0.06] px-1 font-mono text-[9.5px]">DELETE</code>; keep it for this academic project only and never expose it publicly.
             </p>
           </div>
         </div>
@@ -334,6 +334,9 @@ export default function SqlConsole() {
             <div className="border-b border-line px-4 py-3">
               <h2 className="section-title">Quick queries</h2>
               <p className="mt-0.5 text-[10.5px] text-mist">Load a statement into the editor, then run it.</p>
+              <p className="mt-1 text-[10px] leading-4 text-mist">
+                The anon examples use <code className="font-mono">public.anon_sql_demo</code>; create it first. Each RPC call is its own atomic transaction, so explicit <code className="font-mono">BEGIN</code>/<code className="font-mono">COMMIT</code> cannot span editor statements.
+              </p>
             </div>
             <div className="divide-y divide-line">
               {SQL_SAMPLES.map((sample) => (

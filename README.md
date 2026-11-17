@@ -96,7 +96,9 @@ The **Database** page in the app contains a copy-ready version of this policy an
 
 ## SQL console
 
-**System → SQL console** runs SQL directly against the live Postgres database and renders the returned rows. It supports the whole editor, a text selection, or a semicolon-separated script, keeps a local history and refreshes the workspace data after writes.
+**System → SQL console** runs SQL against the live Postgres database and renders the returned rows. It supports the whole editor, a text selection, or a semicolon-separated script, keeps a local history and refreshes the workspace data after writes. Quick queries include DDL, DML, DCL examples for the `anon` role, an atomic transaction example and a cursor-backed query. Start with **DDL · Create anon demo table** before running the examples that use `public.anon_sql_demo`.
+
+The editor sends each semicolon-separated statement as a separate PostgREST RPC call. Each call is atomic, but explicit `BEGIN`/`COMMIT` cannot span multiple editor statements; use a single statement for an atomic change.
 
 Supabase only exposes PostgREST to the browser, so the console needs a small helper function. Run [`supabase/sql-console.sql`](supabase/sql-console.sql) once in the Supabase SQL editor (or copy the same SQL from the setup panel in the app):
 
@@ -109,7 +111,7 @@ grant execute on function public.exec_sql(text) to anon, authenticated;
 notify pgrst, 'reload schema';
 ```
 
-> **Demo only.** This grants the anon role arbitrary SQL, including `DROP` and `DELETE`. It is fine for a local academic project; do not ship it to a public deployment or leave it enabled on a shared database.
+> **Demo only.** The `SECURITY DEFINER` function runs with its owner's privileges, so callers using the anon key can execute arbitrary SQL, including `DROP` and `DELETE`. It is for a local academic project only; do not ship it to a public deployment or leave it enabled on a shared database. Table grants in the DCL examples affect direct anon table access, not the elevated SQL function.
 
 ## Modules
 
